@@ -37,12 +37,29 @@ type Match struct {
 }
 
 type Appointment struct {
-	ID     int    `json:"id"`
-	Pair   string `json:"pair"`
-	Time   string `json:"time"`
-	Place  string `json:"place"`
-	Status string `json:"status"`
-	Agenda string `json:"agenda"`
+	ID        int      `json:"id"`
+	MatchID   int      `json:"matchId"`
+	Pair      string   `json:"pair"`
+	Initiator string   `json:"initiator"`
+	Responder string   `json:"responder"`
+	Time      string   `json:"time"`
+	Place     string   `json:"place"`
+	Status    string   `json:"status"`
+	Agenda    string   `json:"agenda"`
+	Slots     []string `json:"slots"`
+	Version   int      `json:"version"`
+}
+
+type AppointmentRequest struct {
+	MatchID int    `json:"matchId"`
+	Actor   string `json:"actor"`
+	Time    string `json:"time"`
+	Place   string `json:"place"`
+	Agenda  string `json:"agenda"`
+}
+
+type AppointmentAction struct {
+	Actor string `json:"actor"`
 }
 
 type Review struct {

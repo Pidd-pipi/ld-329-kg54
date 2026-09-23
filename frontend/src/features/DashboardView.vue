@@ -1,6 +1,13 @@
 <template>
   <main class="page-shell" v-loading="loading">
-    <AppHeader :unread="overview?.metrics.unread ?? 0" />
+    <AppHeader :unread="overview?.metrics.unread ?? 0">
+      <template #viewer>
+        <ViewerSwitcher
+          :model-value="store.currentUser"
+          @update:model-value="store.switchViewer"
+        />
+      </template>
+    </AppHeader>
 
     <section v-if="overview" class="metrics-grid">
       <MetricCard label="已发布技能" :value="overview.metrics.skills" />
@@ -34,26 +41,36 @@
         </el-table>
       </div>
 
+      <div class="panel negotiation-panel">
+        <h2>智能匹配 · 预约协商</h2>
+        <MatchNegotiationCard
+          v-for="match in overview.matches"
+          :key="match.id"
+          :match="match"
+          :appointment="store.appointmentByMatch.get(match.id)"
+          :current-user="store.currentUser"
+          @initiate="openCreate"
+          @confirm="onConfirm"
+          @reject="onReject"
+          @revise="openRevise"
+        />
+      </div>
+
       <div class="panel">
-        <h2>智能匹配</h2>
-        <FeatureCard v-for="match in overview.matches" :key="match.id" :title="`${match.provider} × ${match.learner}`" :description="match.recommendation">
-          <template #tag><el-tag type="warning">{{ match.score }}%</el-tag></template>
-          <p class="muted">{{ match.offerSkill }} ↔ {{ match.wantedSkill }}</p>
-          <div class="tag-row">
-            <el-tag v-for="slot in match.commonSlots" :key="slot">{{ slot }}</el-tag>
-          </div>
-        </FeatureCard>
+        <h2>待回应预约</h2>
+        <PendingAppointmentList
+          :appointments="store.pendingAppointments"
+          :matches="overview.matches"
+          :current-user="store.currentUser"
+          @confirm="onConfirm"
+          @reject="onReject"
+          @revise="openRevise"
+        />
       </div>
 
       <div class="panel">
         <h2>预约确认</h2>
-        <el-timeline>
-          <el-timeline-item v-for="item in overview.appointments" :key="item.id" :timestamp="item.time">
-            <strong>{{ item.pair }}</strong>
-            <p>{{ item.place }} · {{ item.status }}</p>
-            <p class="muted">{{ item.agenda }}</p>
-          </el-timeline-item>
-        </el-timeline>
+        <ConfirmedAppointmentList :appointments="store.confirmedAppointments" />
       </div>
 
       <div class="panel profile-panel">
@@ -83,29 +100,103 @@
         </FeatureCard>
       </div>
     </section>
+
+    <AppointmentFormDialog
+      v-model="dialogVisible"
+      :match="dialogMatchValue"
+      :actor="store.currentUser"
+      :existing="editingAppointment"
+      :loading="store.busy"
+      @submit="onSubmitDraft"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { ElMessage } from 'element-plus';
 import AppHeader from '../components/AppHeader.vue';
 import FeatureCard from '../components/FeatureCard.vue';
 import MetricCard from '../components/MetricCard.vue';
 import RadarChart from '../components/RadarChart.vue';
+import ViewerSwitcher from '../components/ViewerSwitcher.vue';
+import MatchNegotiationCard from '../components/MatchNegotiationCard.vue';
+import PendingAppointmentList from '../components/PendingAppointmentList.vue';
+import ConfirmedAppointmentList from '../components/ConfirmedAppointmentList.vue';
+import AppointmentFormDialog from '../components/AppointmentFormDialog.vue';
 import { fetchOverview } from '../services/storage.service';
-import type { Overview } from '../types/domain';
+import { useNegotiationStore } from '../stores/negotiation.store';
+import { APPOINTMENT_MESSAGES } from '../constants/appointment.constants';
+import type { Appointment, Match, Overview } from '../types/domain';
+import type { AppointmentDraft } from '../types/appointment';
 
 const overview = ref<Overview | null>(null);
 const loading = ref(true);
 const error = ref('');
 
+const store = useNegotiationStore();
+
+const dialogVisible = ref(false);
+const dialogMatch = ref<Match | null>(null);
+const editingAppointment = ref<Appointment | null>(null);
+
+const dialogMatchValue = computed<Match>(() => dialogMatch.value ?? ({} as Match));
+
 onMounted(async () => {
   try {
     overview.value = await fetchOverview();
+    store.hydrate(overview.value.matches, overview.value.appointments);
   } catch (err) {
-    error.value = err instanceof Error ? err.message : '加载失败';
+    error.value = err instanceof Error ? err.message : APPOINTMENT_MESSAGES.loadFailed;
   } finally {
     loading.value = false;
   }
 });
+
+function openCreate(match: Match): void {
+  editingAppointment.value = null;
+  dialogMatch.value = match;
+  dialogVisible.value = true;
+}
+
+function openRevise(appointment: Appointment): void {
+  const match = overview.value?.matches.find((item) => item.id === appointment.matchId);
+  if (!match) return;
+  editingAppointment.value = appointment;
+  dialogMatch.value = match;
+  dialogVisible.value = true;
+}
+
+async function onSubmitDraft(draft: AppointmentDraft): Promise<void> {
+  try {
+    if (editingAppointment.value) {
+      await store.revise(editingAppointment.value.id, draft);
+      ElMessage.success(APPOINTMENT_MESSAGES.revised);
+    } else {
+      await store.initiate(draft);
+      ElMessage.success(APPOINTMENT_MESSAGES.initiated);
+    }
+    dialogVisible.value = false;
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : APPOINTMENT_MESSAGES.actionFailed);
+  }
+}
+
+async function onConfirm(appointment: Appointment): Promise<void> {
+  try {
+    await store.confirm(appointment.id);
+    ElMessage.success(APPOINTMENT_MESSAGES.confirmed);
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : APPOINTMENT_MESSAGES.actionFailed);
+  }
+}
+
+async function onReject(appointment: Appointment): Promise<void> {
+  try {
+    await store.reject(appointment.id);
+    ElMessage.info(APPOINTMENT_MESSAGES.rejected);
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : APPOINTMENT_MESSAGES.actionFailed);
+  }
+}
 </script>

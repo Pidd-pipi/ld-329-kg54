@@ -17,6 +17,9 @@ body { margin: 0; background: #f6f7f9; color: #18212f; font-family: Inter, "Ping
 .feature-card__title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .feature-card p { margin: 8px 0; line-height: 1.6; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.negotiation-panel .appointment-actions { margin-top: 10px; }
+.viewer-switcher { display: flex; align-items: center; gap: 10px; }
+.viewer-switcher__label { color: #667085; font-size: 13px; white-space: nowrap; }
 .profile-panel { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: center; gap: 16px; }
 .radar-chart { width: 100%; height: 280px; }
 @media (max-width: 900px) {
