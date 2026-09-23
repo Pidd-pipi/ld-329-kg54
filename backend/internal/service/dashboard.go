@@ -26,10 +26,9 @@ func Overview() model.Overview {
 	}
 }
 
-func Skills() []model.Skill             { return repository.ListSkills() }
-func Needs() []model.Need               { return repository.ListNeeds() }
-func Matches() []model.Match            { return repository.ListMatches() }
-func Appointments() []model.Appointment { return repository.ListAppointments() }
-func Reviews() []model.Review           { return repository.ListReviews() }
-func Messages() []model.Conversation    { return repository.ListMessages() }
-func Profile() model.Profile            { return repository.GetProfile() }
+func Skills() []model.Skill          { return repository.ListSkills() }
+func Needs() []model.Need            { return repository.ListNeeds() }
+func Matches() []model.Match         { return repository.ListMatches() }
+func Reviews() []model.Review        { return repository.ListReviews() }
+func Messages() []model.Conversation { return repository.ListMessages() }
+func Profile() model.Profile         { return repository.GetProfile() }

@@ -21,7 +21,7 @@ docker compose up -d
 - 技能发布与管理：技能描述、熟练度、可交换时间段、回报类型和作品凭证。
 - 需求发布与浏览：按类别、校区、期望时间和响应数量查看求助需求。
 - 智能匹配推荐：展示互补技能、匹配度、共同可用时间和推荐理由。
-- 交换预约与确认：记录双方确认状态、时间、地点和协商议程。
+- 交换预约与确认：页头切换双方视角，从匹配发起预约（共同时间、地点、议程），对方可确认或拒绝，发起方可在确认前修改，双方确认后进入预约确认区，同一匹配只保留一条有效预约。
 - 评价与信用体系：评分、文字评价、信用分和信用等级用于推荐权重。
 - 消息通知系统：会话未读红点、系统通知和预约提醒。
 - 个人主页与技能墙：历史交换、收到评价和 ECharts 技能雷达图。
@@ -88,6 +88,10 @@ go run ./cmd/server
 - `GET /api/needs`
 - `GET /api/matches`
 - `GET /api/appointments`
+- `POST /api/appointments`（发起预约：matchId、actor、共同时间、地点、议程）
+- `POST /api/appointments/:id/confirm`（双方确认后生效，重复确认不累计）
+- `POST /api/appointments/:id/reject`（对方拒绝后撤下，可重新发起）
+- `PUT /api/appointments/:id`（发起方在对方确认前修改，需对方重新确认）
 - `GET /api/reviews`
 - `GET /api/messages`
 - `GET /api/profile`

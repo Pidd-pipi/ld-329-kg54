@@ -29,11 +29,13 @@ func ListMatches() []model.Match {
 	}
 }
 
-func ListAppointments() []model.Appointment {
-	return []model.Appointment{
-		{ID: 1, Pair: "林澈 ↔ 孟野", Time: "周六 10:00", Place: "东校区湖边", Status: "双方已确认", Agenda: "先拍宣传照，再约 2 次吉他课"},
-		{ID: 2, Pair: "周芮 ↔ 许安", Time: "周二 19:30", Place: "线上会议室", Status: "等待对方确认", Agenda: "导入问卷 CSV 并完成基础可视化"},
+func FindMatch(id int) (model.Match, bool) {
+	for _, match := range ListMatches() {
+		if match.ID == id {
+			return match, true
+		}
 	}
+	return model.Match{}, false
 }
 
 func ListReviews() []model.Review {

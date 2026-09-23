@@ -34,13 +34,35 @@ export interface Match {
   recommendation: string;
 }
 
+export type AppointmentStatus = 'pending' | 'confirmed' | 'rejected';
+
 export interface Appointment {
   id: number;
+  matchId: number;
   pair: string;
+  initiator: string;
+  responder: string;
   time: string;
   place: string;
-  status: string;
   agenda: string;
+  status: AppointmentStatus;
+  confirmedBy: string[];
+  revision: number;
+}
+
+export interface AppointmentFormPayload {
+  time: string;
+  place: string;
+  agenda: string;
+}
+
+export interface AppointmentCreatePayload extends AppointmentFormPayload {
+  matchId: number;
+  actor: string;
+}
+
+export interface AppointmentRevisePayload extends AppointmentFormPayload {
+  actor: string;
 }
 
 export interface Review {

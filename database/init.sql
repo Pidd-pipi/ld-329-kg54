@@ -31,11 +31,16 @@ CREATE TABLE IF NOT EXISTS needs (
 
 CREATE TABLE IF NOT EXISTS appointments (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  match_id BIGINT NOT NULL,
   pair_name VARCHAR(120) NOT NULL,
+  initiator VARCHAR(80) NOT NULL,
+  responder VARCHAR(80) NOT NULL,
   exchange_time VARCHAR(80) NOT NULL,
   place VARCHAR(120) NOT NULL,
   status VARCHAR(40) NOT NULL,
-  agenda TEXT NOT NULL
+  agenda TEXT NOT NULL,
+  confirmed_by VARCHAR(160) NOT NULL DEFAULT '',
+  revision INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
